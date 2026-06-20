@@ -3,35 +3,32 @@ import sys
 import json
 import datetime
 
-# 1. Gracefully handle missing commands
+
 if len(sys.argv) < 2:
-    print("Usage: task-cli [command] [arguments]")
+    print("Error: No command provided.")
+    print("Type 'task-cli help' to see a list of valid commands.")
     sys.exit()
 
 action = sys.argv[1]
 
-# 2. Safely load existing tasks as a Dictionary
 try:
     with open("tasks.json", "r") as file:
         tasks = json.load(file)
 except FileNotFoundError:
     tasks = {} # Initialize as an empty dictionary
 
-# 3. Route the commands
 
 if action == "add":
     if len(sys.argv) < 3:
         print("Error: Please provide a description.")
         sys.exit()
         
-    # Calculate new ID based on dictionary keys
     if len(tasks) == 0:
         new_id = "1"
     else:
         highest_id = max([int(key) for key in tasks.keys()])
         new_id = str(highest_id + 1)
         
-    # Create the task inside the dictionary using the ID as the key
     tasks[new_id] = {
         "description": sys.argv[2],
         "status": "todo",
@@ -45,10 +42,7 @@ if action == "add":
     print(f"Task added successfully (ID: {new_id})")
 
 elif action == "list":
-    # Check if a filter was provided
     filter_status = sys.argv[2] if len(sys.argv) == 3 else None
-    
-    # .items() gives us the ID (key) and the data (value) at the same time
     for task_id, task_data in tasks.items():
         if filter_status is None or task_data["status"] == filter_status:
             print(f"{task_id} - {task_data['description']} [{task_data['status']}]")
@@ -61,7 +55,6 @@ elif action == "update":
     task_id = sys.argv[2]
     new_description = sys.argv[3]
     
-    # Instant lookup - no for loop needed!
     if task_id in tasks:
         tasks[task_id]['description'] = new_description
         tasks[task_id]['updatedAt'] = datetime.datetime.now().isoformat()
@@ -122,5 +115,19 @@ elif action == "mark-done":
     else:
         print(f"Error: Task {task_id} not found.")
 
+elif action == "help":
+    print("Task Tracker CLI - Available Commands:")
+    print("-" * 40)
+    print("  add <description>         : Add a new task")
+    print("  list                      : List all tasks")
+    print("  list <status>             : Filter tasks by 'todo', 'in-progress', or 'done'")
+    print("  update <id> <description> : Update a task's description")
+    print("  delete <id>               : Completely remove a task")
+    print("  mark-in-progress <id>     : Mark a task as in-progress")
+    print("  mark-done <id>            : Mark a task as done")
+    print("  help                      : Show this help message")
+    print("-" * 40)
+
 else:
     print(f"Unknown command: {action}")
+    print("Type 'task-cli help' to see a list of valid commands.")
